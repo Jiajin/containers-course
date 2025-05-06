@@ -1,0 +1,32 @@
+# Using node23
+FROM node:23
+
+
+LABEL maintainer="sjj"
+
+## 1. Build the application
+# create directory /app
+WORKDIR /app
+
+COPY main.js .
+COPY package-lock.json .
+COPY package.json .
+COPY public public
+COPY views views
+
+# install the dependencies
+RUN npm ci
+RUN apt update && apt install -y curl
+
+## 2. Run the application
+ENV APP_PORT=3000
+
+# add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -s http://localhost:${APP_PORT}/health || exit 1
+
+EXPOSE ${APP_PORT}
+
+ENTRYPOINT PORT=3000 INSTANCE_NAME=not-a-bear INSTANCE_HASH=arbi-hash node main.js
+
+# CMD node main.js
