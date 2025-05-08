@@ -1,0 +1,39 @@
+---
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: mysql-deploy
+  namespace: myns
+  labels:
+    app: mysql 
+spec:
+  replicas: 1 
+  selector: 
+    matchLabels:
+      app: mysql 
+      name: mysql-po 
+  template: 
+    metadata: 
+      name: mysql-po 
+      labels:
+        app: mysql 
+        name: mysql-po 
+    spec:
+      volumes:
+      - name: data-vol
+        persistentVolumeClaim:
+          claimName: db-pvc
+      containers:
+      - name: mysql-container 
+        image: mysql:8 
+        imagePullPolicy: IfNotPresent 
+        env:
+        # do not do this!!!
+        - name: MYSQL_ROOT_PASSWORD
+          value: changeit
+        volumeMounts:
+        - name: data-vol
+          mountPath: /var/lib/mysql
+        ports:
+        - containerPort: 3306 
+        resources: {}

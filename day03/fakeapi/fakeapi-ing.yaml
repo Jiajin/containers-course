@@ -1,0 +1,29 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fakeapi-ing
+  namespace: myns
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: v1-146-190-193-151.nip.io # http://v1-146-190-193-151.nip.io/api/data
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: v1-fakeapi-svc
+            port: 
+              number: 3000
+  - host: v2-146-190-193-151.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: v2-fakeapi-svc
+            port: 
+              number: 3000

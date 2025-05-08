@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cs-svc
+  namespace: myns
+  labels:
+    app: cs
+    version: v1
+spec:
+  type: ClusterIP
+  selector:
+    app: cs
+    name: cs-po
+  ports:
+  - name: cs-api
+    port: 8443
+
+---
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: cs-deploy
+  namespace: myns
+  labels:
+    app: cs 
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: cs 
+      name: cs-po 
+  template: 
+    metadata: 
+      name: cs-po 
+      labels:
+        app: cs 
+        name: cs-po 
+    spec:
+      volumes:
+      - name: workspace-vol
+        persistentVolumeClaim:
+          claimName: cs-pvc
+      containers:
+      - name: cs-container 
+        image: linuxserver/code-server:4.99.4
+        imagePullPolicy: IfNotPresent 
+        # env:
+        # # do not do this!!!
+        # - name: TZ
+        #   value: Asia/Singapore
+        # - name: PASSWORD
+        #   value: password
+        # - name: SUDO_PASSWORD
+        #   value: password
+        # - name: DEFAULT_WORKSPACE
+        #   value: /config/workspace
+        # - name: PROXY_DOMAIN
+        #   value: code-146-190-193-151.nip.io
+        envFrom:
+        - configMapRef:
+            name: cs-cm
+        - secretRef:
+            name: cs-secrets
+        volumeMounts:
+        - name: workspace-vol
+          mountPath: /config/workspace
+        ports:
+        - containerPort: 8443 
+        # set limits on mem
+        resources: 
+          request: 
+            cpu: 200m
+            memory: 512Mi
+          limits: 
+            cpu: 200m
+            memory: 512Mi

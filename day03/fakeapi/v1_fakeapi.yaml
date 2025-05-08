@@ -1,0 +1,49 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: v1-fakeapi-svc
+  namespace: myns
+  labels:
+    app: fakeapi
+    version: v1
+spec:
+  type: ClusterIP
+  selector:
+    app: fakeapi
+    name: v1-fakeapi-po
+    version: v1
+  ports:
+  - name: v1-api
+    port: 3000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: v1-fakeapi-deploy
+  namespace: myns
+  labels:
+    app: fakeapi
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fakeapi
+      name: v1-fakeapi-po
+      version: v1
+  template:
+    metadata:
+      name: v1-fakeapi-po
+      labels:
+        app: fakeapi
+        name: v1-fakeapi-po
+        version: v1
+    spec:
+      containers:
+      - name: v1-fakeapi-container
+        image: chukmunnlee/fake-api:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000

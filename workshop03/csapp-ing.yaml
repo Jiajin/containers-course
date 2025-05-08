@@ -1,0 +1,19 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: csapp-ing
+  namespace: myns
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: code-146-190-193-151.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cs-svc
+            port: 
+              number: 8443
