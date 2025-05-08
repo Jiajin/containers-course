@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dov-cm
+  namespace: myns
+data:
+  instance_name: new value from cm
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dov-secret
+  namespace: myns
+data:
+  INSTANCE_HASH: aGFzaCBmcm9tIGNt

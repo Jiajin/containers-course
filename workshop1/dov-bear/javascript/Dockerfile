@@ -19,14 +19,12 @@ RUN npm ci
 RUN apt update && apt install -y curl
 
 ## 2. Run the application
-ENV APP_PORT=3000
+ENV port=3000 INSTANCE_NAME="dov-bear" INSTANCE_HASH=""
 
 # add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -s http://localhost:${APP_PORT}/health || exit 1
+    CMD curl -s http://localhost:${port}/health || exit 1
 
-EXPOSE ${APP_PORT}
+EXPOSE ${port}
 
-ENTRYPOINT PORT=3000 INSTANCE_NAME=not-a-bear INSTANCE_HASH=arbi-hash node main.js
-
-# CMD node main.js
+ENTRYPOINT node main.js

@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dov-po
+  namespace: myns
+  labels:
+    app: app
+spec:
+  containers:
+  - name: dov-container
+    image: chukmunnlee/dov-bear:v5
+    imagePullPolicy: IfNotPresent
+    env:
+    - name: INSTANCE_NAME
+      value: 'this is instance name'
+    - name: INSTANCE_HASH
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.labels['app']
+    ports:
+    - name: dov-port
+      containerPort: 3000
