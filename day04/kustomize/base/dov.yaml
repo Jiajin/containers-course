@@ -1,0 +1,79 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dov
+
+---
+apiVersion: apps/v1 
+kind: Deployment 
+metadata: 
+  name: dov-deploy 
+  namespace: dov 
+  labels: 
+    app: dov 
+spec: 
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dov
+      env: prod
+  template: 
+    metadata:
+      name: dov-po 
+      labels:
+        app: dov 
+        env: prod
+    spec:
+      containers:
+      - name: dov-containers 
+        image: chukmunnlee/dov-bear:v5
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: INSTANCE_HASH
+          value: abc
+        envFrom:
+        - configMapRef:
+            name: dov-cm
+        ports:
+        - name: dov-port 
+          containerPort: 3000
+        resources: {}
+
+--- 
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: dov-svc 
+  namespace: dov 
+  labels:
+    app: dov 
+spec: 
+  type: ClusterIP
+  selector: 
+    app: dov 
+    env: prod
+  ports:
+  - name: dov-port 
+    port: 8080
+    targetPort: dov-port
+
+--- 
+apiVersion: networking.k8s.io/v1 
+kind: Ingress 
+metadata: 
+  name: dov-ing 
+  namespace: dov 
+spec: 
+  ingressClassName: nginx 
+  rules:
+  - host: dov-188.166.206.98.nip.io 
+    http: 
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service: 
+            name: dov-svc 
+            port:
+              name: dov-port

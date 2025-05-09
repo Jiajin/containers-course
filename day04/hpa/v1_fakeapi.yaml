@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: api
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: v1-fakeapi-svc
+  namespace: api
+  labels:
+    app: fakeapi
+    version: v1
+spec:
+  type: ClusterIP
+  selector:
+    app: fakeapi
+    name: v1-fakeapi-po
+    version: v1
+  ports:
+  - name: v1-api
+    port: 3000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: v1-fakeapi-deploy
+  namespace: api
+  labels:
+    app: fakeapi
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fakeapi
+      name: v1-fakeapi-po
+      version: v1
+  template:
+    metadata:
+      name: v1-fakeapi-po
+      labels:
+        app: fakeapi
+        name: v1-fakeapi-po
+        version: v1
+    spec:
+      containers:
+      - name: v1-fakeapi-container
+        image: chukmunnlee/fake-api:v1-otel
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+        resources:
+          requests: #min
+            memory: 48Mi 
+            cpu: 100m
+          limits: #max
+            memory: 48Mi 
+            cpu: 100m
+
+---
+  apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: api-hpa
+    namespace: api
+  spec:
+    minReplicas: 1
+    maxReplicas: 8
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: v1-fakeapi-deploy
+    metrics:
+    - type: Resource
+      resource: 
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource: 
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 30

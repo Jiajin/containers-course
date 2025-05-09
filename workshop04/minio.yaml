@@ -1,0 +1,115 @@
+---
+apiVersion: apps/v1 
+kind: StatefulSet 
+metadata: 
+  name: minio-deploy 
+  namespace: minio 
+  labels: 
+    app: minio 
+spec: 
+  # headless svc
+  serviceName: minio-hsvc
+  replicas: 3
+  selector:
+    matchLabels:
+      app: minio
+      name: minio-po
+  volumeClaimTemplates:
+  - metadata:
+      name: data-vol
+    spec:
+      accessModes:
+      - ReadWriteOncePod
+      resources:
+        requests:
+          storage: 2Gi
+      storageClassName: do-block-storage
+  template: 
+    metadata:
+      name: minio-po 
+      labels:
+        app: minio 
+        name: minio-po
+    spec:
+      securityContext:
+        fsGroup: 1001 # allows access
+      containers:
+      - name: minio-containers 
+        image: bitnami/minio:2025.4.22
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: minio-cm
+        ports:
+        - name: minio-api-port 
+          containerPort: 9000
+        - name: minio-con-port 
+          containerPort: 9090
+        # readinessProbe:
+        #   httpGet:
+        #     path: /minio/health/ready
+        #     port: minio-api-port 
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   successThreshold: 1
+        #   failureThreshold: 3
+        # livenessProbe:
+        #   httpGet:
+        #     path: /minio/health/live
+        #     port: minio-api-port
+        #   initialDelaySeconds: 10
+        #   periodSeconds: 20
+        #   timeoutSeconds: 5
+        #   successThreshold: 1
+        #   failureThreshold: 3
+        resources:
+          requests:
+            cpu: 200m
+            memory: 250Mi
+          limits:
+            cpu: 200m
+            memory: 250Mi
+        volumeMounts:
+        - name: data-vol
+          mountPath: /data
+---
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: minio-hsvc 
+  namespace: minio 
+  labels:
+    app: minio 
+spec: 
+  clusterIP: None #for headless svc
+  selector: 
+    app: minio 
+    name: minio-po
+  ports:
+  - name: minio-api-port 
+    port: 9000
+    targetPort: minio-api-port 
+  - name: minio-con-port 
+    port: 9090
+    targetPort: minio-con-port
+---
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: minio-svc 
+  namespace: minio 
+  labels:
+    app: minio 
+spec: 
+  type: ClusterIP #for svc
+  selector: 
+    app: minio 
+    name: minio-po
+  ports:
+  - name: minio-api-port 
+    port: 9000
+    targetPort: minio-api-port 
+  - name: minio-con-port 
+    port: 9090
+    targetPort: minio-con-port

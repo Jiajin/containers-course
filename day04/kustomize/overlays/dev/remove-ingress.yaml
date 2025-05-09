@@ -1,0 +1,7 @@
+# demo of removing ingress via patch
+$patch: delete # specifically for deleting
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: # uses the metadata and namespace to find the correct resource
+  name: dov-ing
+  namespace: dov

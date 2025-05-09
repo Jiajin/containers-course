@@ -1,0 +1,86 @@
+---
+apiVersion: apps/v1 
+kind: StatefulSet 
+metadata: 
+  name: dov-deploy 
+  namespace: dov 
+  labels: 
+    app: dov 
+spec: 
+  # headless svc
+  serviceName: dov-hsv
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dov
+      env: prod
+  volumeClaimTemplates:
+  - metadata:
+      name: data-vol
+    spec:
+      accessModes:
+      - ReadWriteOncePod
+      resources:
+        requests:
+          storage: 1Gi
+      storageClassName: do-block-storage
+
+  template: 
+    metadata:
+      name: dov-po 
+      labels:
+        app: dov 
+        env: prod
+    spec:
+      containers:
+      - name: dov-containers 
+        image: chukmunnlee/dov-bear:v5
+        imagePullPolicy: IfNotPresent
+        # env:
+        # - name: INSTANCE_HASH
+        #   value: abc
+        # envFrom:
+        # - configMapRef:
+        #     name: dov-cm
+        ports:
+        - name: dov-port 
+          containerPort: 3000
+        resources: {}
+        volumeMounts:
+        - name: data-vol
+          mountPath: /opt/data
+---
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: dov-svc 
+  namespace: dov 
+  labels:
+    app: dov 
+spec: 
+  type: ClusterIP
+  selector: 
+    app: dov 
+    env: prod
+  ports:
+  - name: dov-port 
+    port: 8080
+    targetPort: dov-port
+
+---
+apiVersion: v1 
+kind: Service 
+metadata: 
+  name: dov-hsvc 
+  namespace: dov 
+  labels:
+    app: dov 
+spec: 
+  type: ClusterIP
+  selector: 
+    app: dov 
+    env: prod
+  ports:
+  - name: dov-port 
+    port: 8080
+    targetPort: dov-port
